@@ -1,3 +1,4 @@
+// app/root.jsx
 import {
   Links,
   Meta,
@@ -5,6 +6,7 @@ import {
   Scripts,
   ScrollRestoration,
 } from "@remix-run/react";
+import Layout from "./components/layout";
 
 export default function App() {
   return (
@@ -21,7 +23,9 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Outlet />
+        <Layout>  {/* Layout component wrapping the content */}
+          <Outlet />
+        </Layout>
         <ScrollRestoration />
         <Scripts />
       </body>
