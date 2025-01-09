@@ -14,12 +14,11 @@ database.sqlite
 .env.*
 
 
-
-
-
 /extensions/*/dist
 
 # Ignore shopify files created during app dev
 .shopify/*
 .shopify.lock
 shopify.app.toml
+shopify.app.toml.prod
+shopify.app.toml.dev
