@@ -11,17 +11,35 @@ import {
 } from "@shopify/polaris";
 import polarisTranslations from "@shopify/polaris/locales/en.json";
 import polarisStyles from "@shopify/polaris/build/esm/styles.css?url";
-import { login } from "../../shopify.server";
+import { login, registerAppInstalledWebhook } from "../../shopify.server"; // Importing necessary server utilities
 import { loginErrorMessage } from "./error.server";
+import { redirect } from "@remix-run/node";
 
+// Links function for loading Polaris styles
 export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
 
+/**
+ * Loader function handles the login flow and registers the APP_INSTALLED webhook.
+ */
 export const loader = async ({ request }) => {
-  const errors = loginErrorMessage(await login(request));
+  const url = new URL(request.url);
+  const shop = url.searchParams.get("shop");
+  const accessToken = url.searchParams.get("access_token");
 
-  return { errors, polarisTranslations };
+  if (!shop || !accessToken) {
+    throw new Error("Missing shop or access token");
+  }
+
+  // Register the APP_INSTALLED webhook
+  await registerAppInstalledWebhook(shop, accessToken);
+
+  // Redirect to the dashboard or initial page
+  return redirect(`/dashboard?shop=${shop}`);
 };
 
+/**
+ * Action function handles login and retrieves necessary data for rendering.
+ */
 export const action = async ({ request }) => {
   const errors = loginErrorMessage(await login(request));
 
@@ -30,10 +48,13 @@ export const action = async ({ request }) => {
   };
 };
 
+/**
+ * The Auth component handles the user interface for logging in.
+ */
 export default function Auth() {
-  const loaderData = useLoaderData();
-  const actionData = useActionData();
-  const [shop, setShop] = useState("");
+  const loaderData = useLoaderData(); // Data from the loader
+  const actionData = useActionData(); // Data from the action
+  const [shop, setShop] = useState(""); // State for the shop input
   const { errors } = actionData || loaderData;
 
   return (
@@ -42,9 +63,12 @@ export default function Auth() {
         <Card>
           <Form method="post">
             <FormLayout>
+              {/* Heading for the login form */}
               <Text variant="headingMd" as="h2">
                 Log in
               </Text>
+
+              {/* Input field for the shop domain */}
               <TextField
                 type="text"
                 name="shop"
@@ -53,8 +77,10 @@ export default function Auth() {
                 value={shop}
                 onChange={setShop}
                 autoComplete="on"
-                error={errors.shop}
+                error={errors?.shop}
               />
+
+              {/* Submit button for the form */}
               <Button submit>Log in</Button>
             </FormLayout>
           </Form>
